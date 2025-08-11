@@ -1,5 +1,5 @@
--- SEEDS-STYLE LIQUID HUB WITH TRY AGAIN NOTIFICATION
--- MODIFIED BY SIGMA @rizzify101
+-- VULN HUB WITH IMPROVED WARNING LAYOUT
+-- FIXED BY SIGMA @rizzify101
 
 local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -76,7 +76,7 @@ barContainer.BackgroundTransparency = 0.7
 barContainer.BorderSizePixel = 0
 Instance.new("UICorner", barContainer).CornerRadius = UDim.new(1, 0)
 
--- Liquid fill
+-- Liquid fill with 20-second load time
 local barFill = Instance.new("Frame", barContainer)
 barFill.Size = UDim2.new(0, 0, 1, 0)
 barFill.BackgroundColor3 = Color3.fromRGB(100, 180, 255)
@@ -84,8 +84,8 @@ barFill.BackgroundTransparency = 0.4
 barFill.BorderSizePixel = 0
 Instance.new("UICorner", barFill).CornerRadius = UDim.new(1, 0)
 
--- Animate fill
-TweenService:Create(barFill, TweenInfo.new(3, Enum.EasingStyle.Linear), {
+-- Animate fill (20 seconds)
+TweenService:Create(barFill, TweenInfo.new(20, Enum.EasingStyle.Linear), {
     Size = UDim2.new(1, 0, 1, 0)
 }):Play()
 
@@ -101,113 +101,170 @@ currency.TextSize = 14
 currency.TextXAlignment = Enum.TextXAlignment.Center
 currency.BackgroundTransparency = 1
 
--- Loading dots animation
+-- Slower loading dots animation (sync with 20s load)
 task.spawn(function()
     local dots = {"", ".", "..", "..."}
     local index = 1
     while loading and loading.Parent do
         loading.Text = "Loading" .. dots[index]
         index = (index % #dots) + 1
-        task.wait(0.4)
+        task.wait(0.8) -- Slower dot animation
     end
 end)
 
--- Function to create TRY AGAIN notification
-local function createTryAgainNotification()
+-- Function to create heartbeat warning with FIXED LAYOUT
+local function createHeartbeatWarning()
     local notification = Instance.new("Frame", gui)
     notification.AnchorPoint = Vector2.new(0.5, 0.5)
-    notification.Size = UDim2.new(0, 200, 0, 80)
+    notification.Size = UDim2.new(0, 240, 0, 120) -- Taller for better spacing
     notification.Position = UDim2.new(0.5, 0, 0.5, 0)
-    notification.BackgroundColor3 = Color3.fromRGB(20, 25, 30)
-    notification.BackgroundTransparency = 0.9
+    notification.BackgroundColor3 = Color3.fromRGB(30, 15, 20)
+    notification.BackgroundTransparency = 0.85
     notification.BorderSizePixel = 0
     
-    Instance.new("UICorner", notification).CornerRadius = UDim.new(0, 6)
+    Instance.new("UICorner", notification).CornerRadius = UDim.new(0, 8)
     
+    -- Pulsing border
     local glow = Instance.new("UIStroke", notification)
-    glow.Color = Color3.fromRGB(100, 180, 255)
-    glow.Thickness = 1
-    glow.Transparency = 0.7
+    glow.Color = Color3.fromRGB(255, 80, 100)
+    glow.Thickness = 2
+    glow.Transparency = 0.5
     
-    local text = Instance.new("TextLabel", notification)
-    text.Size = UDim2.new(1, 0, 1, 0)
-    text.Text = "TRY AGAIN"
-    text.TextColor3 = Color3.fromRGB(255, 120, 120) -- Red accent
-    text.Font = Enum.Font.GothamBold
-    text.TextSize = 20
-    text.TextXAlignment = Enum.TextXAlignment.Center
-    text.TextYAlignment = Enum.TextYAlignment.Center
-    text.BackgroundTransparency = 1
+    -- Warning icon with heartbeat (centered horizontally)
+    local icon = Instance.new("ImageLabel", notification)
+    icon.Image = "rbxassetid://3926307971"
+    icon.ImageColor3 = Color3.fromRGB(255, 60, 80)
+    icon.Size = UDim2.new(0, 36, 0, 36)
+    icon.Position = UDim2.new(0.5, 0, 0.2, 0) -- Higher up
+    icon.AnchorPoint = Vector2.new(0.5, 0)
+    icon.BackgroundTransparency = 1
     
-    -- Pulsing animation
-    task.spawn(function()
-        while text and text.Parent do
-            TweenService:Create(text, TweenInfo.new(0.8, Enum.EasingStyle.Sine), {
-                TextTransparency = 0.2
+    -- Warning text (below icon, centered)
+    local warningText = Instance.new("TextLabel", notification)
+    warningText.Size = UDim2.new(0.9, 0, 0, 24)
+    warningText.Position = UDim2.new(0.5, 0, 0.45, 0)
+    warningText.AnchorPoint = Vector2.new(0.5, 0)
+    warningText.Text = "WARNING"
+    warningText.TextColor3 = Color3.fromRGB(255, 100, 120)
+    warningText.Font = Enum.Font.GothamBold
+    warningText.TextSize = 22
+    warningText.TextXAlignment = Enum.TextXAlignment.Center
+    warningText.BackgroundTransparency = 1
+    
+    -- Subtext (below warning, with proper spacing)
+    local subtext = Instance.new("TextLabel", notification)
+    subtext.Size = UDim2.new(0.8, 0, 0, 40)
+    subtext.Position = UDim2.new(0.5, 0, 0.65, 0)
+    subtext.AnchorPoint = Vector2.new(0.5, 0)
+    subtext.Text = "System Traffic\nTry again later"
+    subtext.TextColor3 = Color3.fromRGB(255, 150, 150)
+    subtext.Font = Enum.Font.Gotham
+    subtext.TextSize = 14
+    subtext.TextXAlignment = Enum.TextXAlignment.Center
+    subtext.TextYAlignment = Enum.TextYAlignment.Top
+    subtext.BackgroundTransparency = 1
+    
+    -- Heartbeat pulse function
+    local function pulse()
+        while icon and icon.Parent do
+            -- Quick beat
+            TweenService:Create(icon, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
+                Size = UDim2.new(0, 42, 0, 42),
+                ImageColor3 = Color3.fromRGB(255, 80, 80)
             }):Play()
-            task.wait(0.8)
-            TweenService:Create(text, TweenInfo.new(0.8, Enum.EasingStyle.Sine), {
-                TextTransparency = 0.5
+            TweenService:Create(warningText, TweenInfo.new(0.15), {
+                TextSize = 24,
+                TextColor3 = Color3.fromRGB(255, 120, 120)
             }):Play()
-            task.wait(0.8)
+            task.wait(0.15)
+            
+            -- Return to normal
+            TweenService:Create(icon, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
+                Size = UDim2.new(0, 36, 0, 36),
+                ImageColor3 = Color3.fromRGB(255, 60, 80)
+            }):Play()
+            TweenService:Create(warningText, TweenInfo.new(0.3), {
+                TextSize = 22,
+                TextColor3 = Color3.fromRGB(255, 100, 120)
+            }):Play()
+            
+            -- Longer pause between beats
+            task.wait(0.8 + math.random()*0.4)
         end
-    end)
+    end
     
     -- Fade in
     notification.BackgroundTransparency = 1
     glow.Transparency = 1
-    text.TextTransparency = 1
+    icon.ImageTransparency = 1
+    warningText.TextTransparency = 1
+    subtext.TextTransparency = 1
     
-    TweenService:Create(notification, TweenInfo.new(0.5), {
-        BackgroundTransparency = 0.9
+    TweenService:Create(notification, TweenInfo.new(0.7), {
+        BackgroundTransparency = 0.85
     }):Play()
-    TweenService:Create(glow, TweenInfo.new(0.5), {
-        Transparency = 0.7
+    TweenService:Create(glow, TweenInfo.new(0.7), {
+        Transparency = 0.5
     }):Play()
-    TweenService:Create(text, TweenInfo.new(0.5), {
+    TweenService:Create(icon, TweenInfo.new(0.7), {
+        ImageTransparency = 0
+    }):Play()
+    TweenService:Create(warningText, TweenInfo.new(0.7), {
+        TextTransparency = 0
+    }):Play()
+    TweenService:Create(subtext, TweenInfo.new(0.7), {
         TextTransparency = 0.2
     }):Play()
     
-    -- Auto-close after 3 seconds
-    task.delay(3, function()
-        TweenService:Create(notification, TweenInfo.new(0.5), {
+    -- Start heartbeat
+    task.spawn(pulse)
+    
+    -- Auto-close after 5 seconds
+    task.delay(5, function()
+        TweenService:Create(notification, TweenInfo.new(1), {
             BackgroundTransparency = 1
         }):Play()
-        TweenService:Create(glow, TweenInfo.new(0.5), {
+        TweenService:Create(glow, TweenInfo.new(1), {
             Transparency = 1
         }):Play()
-        TweenService:Create(text, TweenInfo.new(0.5), {
+        TweenService:Create(icon, TweenInfo.new(1), {
+            ImageTransparency = 1
+        }):Play()
+        TweenService:Create(warningText, TweenInfo.new(1), {
             TextTransparency = 1
         }):Play()
-        task.wait(0.5)
+        TweenService:Create(subtext, TweenInfo.new(1), {
+            TextTransparency = 1
+        }):Play()
+        task.wait(1)
         notification:Destroy()
     end)
 end
 
--- Clean fade out and show notification
-task.delay(3, function()
+-- Clean fade out and show heartbeat warning
+task.delay(20, function() -- 20 second delay
     -- Fade out loading screen
-    TweenService:Create(frame, TweenInfo.new(0.5), {
+    TweenService:Create(frame, TweenInfo.new(1), {
         BackgroundTransparency = 1,
         Size = UDim2.new(0, 340, 0, 190)
     }):Play()
-    TweenService:Create(title, TweenInfo.new(0.5), {
+    TweenService:Create(title, TweenInfo.new(1), {
         TextTransparency = 1
     }):Play()
-    TweenService:Create(loading, TweenInfo.new(0.5), {
+    TweenService:Create(loading, TweenInfo.new(1), {
         TextTransparency = 1
     }):Play()
-    TweenService:Create(barFill, TweenInfo.new(0.5), {
+    TweenService:Create(barFill, TweenInfo.new(1), {
         BackgroundTransparency = 1
     }):Play()
     
-    task.wait(0.5) -- Wait for fade out to complete
+    task.wait(1)
     
-    -- Show notification
-    createTryAgainNotification()
+    -- Show heartbeat warning
+    createHeartbeatWarning()
     
     -- Cleanup
-    task.wait(3.5) -- Wait for notification to disappear
+    task.wait(6)
     gui:Destroy()
     blur:Destroy()
 end)
